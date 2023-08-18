@@ -1,12 +1,12 @@
 {
-  "name": "adunsulag/oe-module-custom-skeleton",
+  "name": "preet-adhikari/oe-module-custom-fhir-device-request",
   "description": "OpenEMR Custom Module Skeleton Starter Project",
   "type": "openemr-module",
   "license": "GPL-3.0",
   "authors": [
     {
-      "name": "Stephen Nielson",
-      "email": "stephen@nielson.org",
+      "name": "Preet Adhikari",
+      "email": "blazin.preet@gmail.com",
       "role": "Developer"
     }
   ],
@@ -23,5 +23,10 @@
   },
   "conflict": {
     "openemr/openemr": "<6.0.0"
+  },
+  "config": {
+    "allow-plugins": {
+      "openemr/oe-module-installer-plugin": true
+    }
   }
 }
