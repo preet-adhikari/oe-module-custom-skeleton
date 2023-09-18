@@ -10,7 +10,7 @@
  * @license   https://github.com/openemr/openemr/blob/master/LICENSE GNU General Public License 3
  */
 
-namespace OpenEMR\Modules\CustomModuleSkeleton;
+namespace OpenEMR\Modules\FHIRDeviceRequest;
 
 use OpenEMR\Common\Http\HttpRestRequest;
 use OpenEMR\Common\Http\HttpRestRouteHandler;
@@ -19,14 +19,16 @@ use OpenEMR\FHIR\R4\FHIRResource\FHIRBundle\FHIRBundleEntry;
 use OpenEMR\RestControllers\RestControllerHelper;
 use OpenEMR\Services\FHIR\FhirResourcesService;
 use Psr\Http\Message\ResponseInterface;
+use OpenEMR\FHIR\R4\FHIRResource\FHIRDomainResource\FHIRDeviceRequest;
+use OpenEMR\Modules\DeviceRequest\FhirDeviceRequestService;
 use RestConfig;
 
-class CustomSkeletonRestController
+class FHIRDeviceRequestRestController
 {
     /**
-     * @var CustomSkeletonFHIRResourceService
+     * @var FhirDeviceRequestService
      */
-    private $customSkeletonResourceService;
+    private $fhirDeviceRequestService;
 
     /**
      * @var FhirResourcesService
@@ -35,8 +37,8 @@ class CustomSkeletonRestController
 
     public function __construct()
     {
-        $this->customSkeletonResourceService = new CustomSkeletonFHIRResourceService();
         $this->fhirService = new FhirResourcesService();
+        $this->fhirDeviceRequestService = new FhirDeviceRequestService();
     }
 
     /**
@@ -46,7 +48,7 @@ class CustomSkeletonRestController
      * @param HttpRestRequest
      * @return FHIRBundle
      */
-    public function listResources(HttpRestRequest $request) : FHIRBundle
+    public function listResources(HttpRestRequest $request) 
     {
 
         if ($request->isPatientRequest()) {
@@ -57,7 +59,7 @@ class CustomSkeletonRestController
              * If you need to check the API against any kind of ACL the RestConfig object will do an authorization check
              * and handle the API result back to the HTTP client
              */
-            // RestConfig::authorization_check("patients", "med");
+            RestConfig::authorization_check("patients", "med");
             $result = $this->getAll($request->getQueryParams());
         }
         return $result;
@@ -71,7 +73,7 @@ class CustomSkeletonRestController
      * @param HttpRestRequest $request
      * @return ResponseInterface
      */
-    public function getOneResource($fhirId, HttpRestRequest $request) : CustomSkeletonFHIRResource
+    public function getOneResource($fhirId, HttpRestRequest $request) 
     {
         if ($request->isPatientRequest()) {
             // only allow access to data of binded patient
@@ -81,7 +83,7 @@ class CustomSkeletonRestController
              * If you need to check the API against any kind of ACL the RestConfig object will do an authorization check
              * and handle the API result back to the HTTP client
              */
-            // RestConfig::authorization_check("patients", "med");
+            RestConfig::authorization_check("patients", "med");
             $result = $this->getOne($fhirId);
         }
         return $result;
@@ -99,7 +101,7 @@ class CustomSkeletonRestController
      */
     public function getAll($searchParams, $puuidBind = null)
     {
-        $processingResult = $this->customSkeletonResourceService->getAll($searchParams, $puuidBind);
+        $processingResult = $this->fhirDeviceRequestService->getAll($searchParams, $puuidBind);
         $bundleEntries = array();
         foreach ($processingResult->getData() as $index => $searchResult) {
             $bundleEntry = [
@@ -109,7 +111,7 @@ class CustomSkeletonRestController
             $fhirBundleEntry = new FHIRBundleEntry($bundleEntry);
             array_push($bundleEntries, $fhirBundleEntry);
         }
-        $bundleSearchResult = $this->fhirService->createBundle('CustomSkeletonResource', $bundleEntries, false);
+        $bundleSearchResult = $this->fhirService->createBundle('FHIRDeviceRequest', $bundleEntries, false);
         $searchResponseBody = RestControllerHelper::responseHandler($bundleSearchResult, null, 200);
         return $searchResponseBody;
     }
@@ -122,7 +124,7 @@ class CustomSkeletonRestController
      */
     public function getOne($fhirId, $puuidBind = null)
     {
-        $processingResult = $this->customSkeletonResourceService->getOne($fhirId, $puuidBind);
+        $processingResult = $this->fhirDeviceRequestService->getOne($fhirId, $puuidBind);
         return RestControllerHelper::handleFhirProcessingResult($processingResult, 200);
     }
 }

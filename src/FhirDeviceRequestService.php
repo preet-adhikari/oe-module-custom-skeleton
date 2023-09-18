@@ -132,8 +132,7 @@ class FhirDeviceRequestService extends FhirServiceBase implements IPatientCompar
             'patient' => $this->getPatientContextSearchField(),
             'intent' => new FhirSearchParameterDefinition('intent', SearchFieldType::TOKEN, ['intent']),
             'status' => new FhirSearchParameterDefinition('status', SearchFieldType::TOKEN, ['status']),
-            '_id' => new FhirSearchParameterDefinition('_id', SearchFieldType::TOKEN, [new ServiceField('_id', ServiceField::TYPE_STRING)]),
-            'patient' => $this->getPatientContextSearchField()
+            '_id' => new FhirSearchParameterDefinition('_id', SearchFieldType::TOKEN, [new ServiceField('uuid', ServiceField::TYPE_UUID)]),
         ];
     }
 
@@ -214,7 +213,7 @@ class FhirDeviceRequestService extends FhirServiceBase implements IPatientCompar
         {
             throw new \BadMethodCallException("Data record should be correct instance class");
         }
-        $fhirProvenanceService = new FhirProvenanveService();
+        $fhirProvenanceService = new FhirProvenanceService();
         $fhirProvenance = $fhirProvenanceService->createProvenanceForDomainResource($dataRecord);
         if ($encode)
         {

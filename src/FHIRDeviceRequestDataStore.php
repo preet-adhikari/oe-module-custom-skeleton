@@ -13,6 +13,8 @@
 
 namespace OpenEMR\Modules\FHIRDeviceRequest;
 
+use OpenEMR\Validators\ProcessingResult;
+
 class FHIRDeviceRequestDataStore
 {
     /**
@@ -61,5 +63,10 @@ class FHIRDeviceRequestDataStore
             ,['_id' => 3, '_message' => 'This is resource 3', '_patient' => 2]
         ];
         return $resources;
+    }
+
+    public function search($search, $isAndCondition = true)
+    {
+        return new ProcessingResult();
     }
 }

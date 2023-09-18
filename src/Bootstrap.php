@@ -14,7 +14,7 @@
  * @license   https://github.com/openemr/openemr/blob/master/LICENSE GNU General Public License 3
  */
 
-namespace OpenEMR\Modules\CustomModuleSkeleton;
+namespace OpenEMR\Modules\FHIRDeviceRequest;
 
 /**
  * Note the below use statements are importing classes from the OpenEMR core codebase
@@ -30,19 +30,19 @@ use OpenEMR\Events\RestApiExtend\RestApiScopeEvent;
 use OpenEMR\Services\Globals\GlobalSetting;
 use OpenEMR\Menu\MenuEvent;
 use OpenEMR\Events\RestApiExtend\RestApiCreateEvent;
-
+use OpenEMR\Modules\DeviceRequest\FhirDeviceRequestService;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Twig\Error\LoaderError;
 use Twig\Loader\FilesystemLoader;
 
 // we import our own classes here.. although this use statement is unnecessary it forces the autoloader to be tested.
-use OpenEMR\Modules\CustomModuleSkeleton\CustomSkeletonRestController;
+use OpenEMR\Modules\FHIRDeviceRequest\FHIRDeviceRequestRestController;
 
 
 class Bootstrap
 {
     const MODULE_INSTALLATION_PATH = "/interface/modules/custom_modules/";
-    const MODULE_NAME = "oe-module-custom-skeleton";
+    const MODULE_NAME = "oe-module-fhir-devicerequest";
     /**
      * @var EventDispatcherInterface The object responsible for sending and subscribing to events through the OpenEMR system
      */
@@ -208,10 +208,10 @@ class Bootstrap
         $menuItem->requirement = 0;
         $menuItem->target = 'mod';
         $menuItem->menu_id = 'mod0';
-        $menuItem->label = xlt("Custom Module Skeleton");
+        $menuItem->label = xlt("FHIR DeviceRequest");
         // TODO: pull the install location into a constant into the codebase so if OpenEMR changes this location it
         // doesn't break any modules.
-        $menuItem->url = "/interface/modules/custom_modules/oe-module-custom-skeleton/public/sample-index.php";
+        $menuItem->url = "/interface/modules/custom_modules/oe-module-fhir-devicerequest/public/sample-index.php";
         $menuItem->children = [];
 
         /**
@@ -265,13 +265,13 @@ class Bootstrap
 
     public function addCustomSkeletonApi(RestApiCreateEvent $event)
     {
-        $apiController = new CustomSkeletonRestController();
+        $apiController = new FHIRDeviceRequestRestController();
 
         /**
          * To see the route definitions @see https://github.com/openemr/openemr/blob/master/_rest_routes.inc.php
          */
-        $event->addToFHIRRouteMap('GET /fhir/CustomSkeletonResource', [$apiController, 'listResources']);
-        $event->addToFHIRRouteMap('GET /fhir/CustomSkeletonResource/:fhirId', [$apiController, 'getOneResource']);
+        $event->addToFHIRRouteMap('GET /fhir/DeviceRequestResource', [$apiController, 'listResources']);
+        $event->addToFHIRRouteMap('GET /fhir/DeviceRequestResource/:fhirId', [$apiController, 'getOneResource']);
 
         /**
          * Events must ALWAYS be returned
@@ -289,12 +289,12 @@ class Bootstrap
     {
         if ($event->getApiType() == RestApiScopeEvent::API_TYPE_FHIR) {
             $scopes = $event->getScopes();
-            $scopes[] = 'user/CustomSkeletonResource.read';
-            $scopes[] = 'patient/CustomSkeletonResource.read';
+            $scopes[] = 'user/DeviceRequestResource.read';
+            $scopes[] = 'patient/DeviceRequestResource.read';
             // only add system scopes if they are actually enabled
             if (\RestConfig::areSystemScopesEnabled())
             {
-                $scopes[] = 'system/CustomSkeletonResource.read';
+                $scopes[] = 'system/DeviceRequestResource.read';
             }
             $event->setScopes($scopes);
         }
@@ -303,7 +303,7 @@ class Bootstrap
 
     public function addMetadataConformance(RestApiResourceServiceEvent $event)
     {
-        $event->setServiceClass(CustomSkeletonFHIRResourceService::class);
+        $event->setServiceClass(FhirDeviceRequestService::class);
         return $event;
     }
 
