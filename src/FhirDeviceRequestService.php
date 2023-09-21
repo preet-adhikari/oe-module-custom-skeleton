@@ -30,6 +30,8 @@ use OpenEMR\Services\Search\ServiceField;
 use OpenEMR\Services\Search\TokenSearchField;
 use OpenEMR\Validators\ProcessingResult;
 use OpenEMR\FHIR\R4\FHIRElement\FHIRDateTime;
+use OpenEMR\Services\FHIR\FhirOrganizationService;
+use OpenEMR\Services\FHIR\FhirProvenanceService;
 
 
 
@@ -113,8 +115,17 @@ class FhirDeviceRequestService extends FhirServiceBase implements IPatientCompar
             $deviceRequestResource->setAuthoredOn($authored_on);
         }
 
-        $deviceRequestResource->setText($dataRecord['_message']);
-        $deviceRequestResource->setPatient(UtilsService::createRelativeReference("Patient", $dataRecord['_patient']));
+         // requester required
+         if (!empty($dataRecord['pruuid'])) {
+            $deviceRequestResource->setRequester(UtilsService::createRelativeReference('Practitioner', $dataRecord['pruuid']));
+        } else {
+            // if we have no practitioner we need to default it to the organization
+            $fhirOrgService = new FhirOrganizationService();
+            $deviceRequestResource->setRequester($fhirOrgService->getPrimaryBusinessEntityReference());
+        }
+
+        // $deviceRequestResource->setText($dataRecord['_message']);
+        // $deviceRequestResource->setPatient(UtilsService::createRelativeReference("Patient", $dataRecord['_patient']));
         return $deviceRequestResource;
     }
 

@@ -13,10 +13,25 @@
 
 namespace OpenEMR\Modules\FHIRDeviceRequest;
 
+use OpenEMR\Common\Uuid\UuidRegistry;
+use OpenEMR\Services\BaseService;
 use OpenEMR\Validators\ProcessingResult;
 
-class FHIRDeviceRequestDataStore
+class FHIRDeviceRequestDataStore extends BaseService
 {
+
+    private const DEVICEREQUEST_TABLE = "device_request";
+
+    /**
+     * Default constructor.
+     */
+    public function __construct()
+    {
+        parent::__construct(self::DEVICEREQUEST_TABLE);
+        UuidRegistry::createMissingUuidsForTables([self::DEVICEREQUEST_TABLE]);
+    }
+    
+
     /**
      * Returns a custom skeleton record for the given id, or null if none found
      * @param $id
@@ -67,6 +82,8 @@ class FHIRDeviceRequestDataStore
 
     public function search($search, $isAndCondition = true)
     {
+
+
         return new ProcessingResult();
     }
 }
