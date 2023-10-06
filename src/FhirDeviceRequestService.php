@@ -12,7 +12,7 @@
  * @license   https://github.com/openemr/openemr/blob/master/LICENSE GNU General Public License 3
  */
 
-namespace OpenEMR\Modules\DeviceRequest;
+namespace OpenEMR\Modules\FHIRDeviceRequest;
 
 use OpenEMR\FHIR\R4\FHIRDomainResource\FHIRProvenance;
 use OpenEMR\FHIR\R4\FHIRDomainResource\FHIRDeviceRequest;
@@ -63,7 +63,7 @@ class FhirDeviceRequestService extends FhirServiceBase implements IPatientCompar
     public function __construct($fhirApiURL = null)
     {
         parent::__construct($fhirApiURL);
-        $this->dataStore = new FhirDeviceRequestService();
+        $this->dataStore = new FhirDeviceRequestDataStore();
     }
 
     /**

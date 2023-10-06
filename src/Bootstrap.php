@@ -30,7 +30,7 @@ use OpenEMR\Events\RestApiExtend\RestApiScopeEvent;
 use OpenEMR\Services\Globals\GlobalSetting;
 use OpenEMR\Menu\MenuEvent;
 use OpenEMR\Events\RestApiExtend\RestApiCreateEvent;
-use OpenEMR\Modules\DeviceRequest\FhirDeviceRequestService;
+use OpenEMR\Modules\FHIRDeviceRequest\FhirDeviceRequestService;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Twig\Error\LoaderError;
 use Twig\Loader\FilesystemLoader;
@@ -120,7 +120,7 @@ class Bootstrap
         global $GLOBALS;
 
         $service = $event->getGlobalsService();
-        $section = xlt("Skeleton Module");
+        $section = xlt("FHIR DeviceRequest");
         $service->createSection($section, 'Portal');
 
         $settings = $this->globalsConfig->getGlobalSettingSectionConfiguration();

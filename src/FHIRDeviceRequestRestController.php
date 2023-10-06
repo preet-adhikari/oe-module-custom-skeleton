@@ -20,7 +20,7 @@ use OpenEMR\RestControllers\RestControllerHelper;
 use OpenEMR\Services\FHIR\FhirResourcesService;
 use Psr\Http\Message\ResponseInterface;
 use OpenEMR\FHIR\R4\FHIRResource\FHIRDomainResource\FHIRDeviceRequest;
-use OpenEMR\Modules\DeviceRequest\FhirDeviceRequestService;
+use OpenEMR\Modules\FHIRDeviceRequest\FhirDeviceRequestService;
 use RestConfig;
 
 class FHIRDeviceRequestRestController

@@ -20,7 +20,7 @@ use OpenEMR\Validators\ProcessingResult;
 class FHIRDeviceRequestDataStore extends BaseService
 {
 
-    private const DEVICEREQUEST_TABLE = "device_request";
+    private const DEVICEREQUEST_TABLE = 'device_request';
 
     /**
      * Default constructor.
@@ -82,8 +82,7 @@ class FHIRDeviceRequestDataStore extends BaseService
 
     public function search($search, $isAndCondition = true)
     {
-
-
+        
         return new ProcessingResult();
     }
 }
