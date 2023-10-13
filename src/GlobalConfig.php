@@ -47,7 +47,7 @@ class GlobalConfig
      */
     public function isConfigured()
     {
-        $keys = [self::CONFIG_OPTION_TEXT, self::CONFIG_OPTION_ENCRYPTED];
+        $keys = [self::CONFIG_OPTION_TEXT, self::CONFIG_OPTION_ENCRYPTED, self::CONFIG_ENABLE_FHIR_API];
         foreach ($keys as $key) {
             $value = $this->getGlobalSetting($key);
             if (empty($value)) {

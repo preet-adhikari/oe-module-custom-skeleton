@@ -50,11 +50,12 @@ class FHIRDeviceRequestRestController
      */
     public function listResources(HttpRestRequest $request) 
     {
-
         if ($request->isPatientRequest()) {
+            return "hello";
             // only allow access to data of binded patient
             $result = $this->getAll($request->getQueryParams(), $request->getPatientUUIDString());
         } else {
+            return "hello";
             /**
              * If you need to check the API against any kind of ACL the RestConfig object will do an authorization check
              * and handle the API result back to the HTTP client

@@ -20,6 +20,7 @@ namespace OpenEMR\Modules\FHIRDeviceRequest;
  * Note the below use statements are importing classes from the OpenEMR core codebase
  */
 use OpenEMR\Common\Logging\SystemLogger;
+use OpenEMR\Common\Http\HttpRestRequest;
 use OpenEMR\Common\Twig\TwigContainer;
 use OpenEMR\Core\Kernel;
 use OpenEMR\Events\Core\TwigEnvironmentEvent;
@@ -266,12 +267,13 @@ class Bootstrap
     public function addCustomSkeletonApi(RestApiCreateEvent $event)
     {
         $apiController = new FHIRDeviceRequestRestController();
+    
 
         /**
          * To see the route definitions @see https://github.com/openemr/openemr/blob/master/_rest_routes.inc.php
          */
-        $event->addToFHIRRouteMap('GET /fhir/DeviceRequestResource', [$apiController, 'listResources']);
-        $event->addToFHIRRouteMap('GET /fhir/DeviceRequestResource/:fhirId', [$apiController, 'getOneResource']);
+        $event->addToFHIRRouteMap('GET /fhir/DeviceRequest', [$apiController, 'listResources']);
+        $event->addToFHIRRouteMap('GET /fhir/DeviceRequest/:fhirId', [$apiController, 'getOneResource']);
 
         /**
          * Events must ALWAYS be returned
@@ -289,12 +291,12 @@ class Bootstrap
     {
         if ($event->getApiType() == RestApiScopeEvent::API_TYPE_FHIR) {
             $scopes = $event->getScopes();
-            $scopes[] = 'user/DeviceRequestResource.read';
-            $scopes[] = 'patient/DeviceRequestResource.read';
+            $scopes[] = 'user/DeviceRequest.read';
+            $scopes[] = 'patient/DeviceRequest.read';
             // only add system scopes if they are actually enabled
             if (\RestConfig::areSystemScopesEnabled())
             {
-                $scopes[] = 'system/DeviceRequestResource.read';
+                $scopes[] = 'system/DeviceRequest.read';
             }
             $event->setScopes($scopes);
         }
