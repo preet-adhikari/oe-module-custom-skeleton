@@ -16,6 +16,8 @@ namespace OpenEMR\Modules\FHIRDeviceRequest;
 use OpenEMR\Common\Uuid\UuidRegistry;
 use OpenEMR\Services\BaseService;
 use OpenEMR\Validators\ProcessingResult;
+use OpenEMR\Services\Search\FhirSearchWhereClauseBuilder;
+use OpenEMR\Common\Database\QueryUtils;
 
 class FHIRDeviceRequestDataStore extends BaseService
 {
@@ -68,23 +70,69 @@ class FHIRDeviceRequestDataStore extends BaseService
 
     /**
      * Returns the entire data store of custom skeleton records.
-     * @return array
+     * @return ProcessingResult
      */
-    public function getResourceDataStore()
+    public function getResourceDataStore($search = array(), $isAndCondition = true, $puuidBind = null)
     {
         $resources = [
-            // ['_id' => 1 ,'_message' => 'This is resource 1', '_patient' => 1]
+            ['_id' => 1 ,'_message' => 'This is resource 1', '_patient' => 1]
             // ,['_id' => 2 ,'_message' => 'This is resource 2', '_patient' => 2]
             // ,['_id' => 3, '_message' => 'This is resource 3', '_patient' => 2]
         ];
 
         //Working on SQL script
-        return $resources;
+        // $sql = "SELECT 
+        //         device_request.uuid,
+        //         device_request.pid,
+        //         device_request.encounter,
+        //         device_request.date,
+        //         device_request.pruuid,
+        //         device_request.location_uuid,
+        //         device_request.device_uuid,
+        //         device_request.organization_uuid,
+        //         device_request.status,
+        //         device_request.intent,
+        //         device_request.priority,
+        //         device_request.insurance_uuid,
+        //         device_request.supporting_info,
+        //         device_request.note,
+        //         device_request.relevant_history_uuid,
+        //         device_request.last_updated";
+
+        $sql = "SELECT * FROM device_request";
+        $whereClause = FhirSearchWhereClauseBuilder::build($search, $isAndCondition);
+
+        $sql .= $whereClause->getFragment();
+        
+        $sqlBindArray = $whereClause->getBoundValues();
+        $statementResults =  QueryUtils::sqlStatementThrowException($sql, $sqlBindArray);
+    
+        $processingResult = new ProcessingResult();
+        while ($row = sqlFetchArray($statementResults)) {
+            $record = $this->createResultRecordFromDatabaseResult($row);
+            $processingResult->addData($record);
+        }
+        return $processingResult;
     }
 
     public function search($search, $isAndCondition = true)
     {
         
         return new ProcessingResult();
+    }
+
+
+    // UUID fields to convert into string
+    public function getUuidFields(): array
+    {
+        return ['uuid', 'pid', 'encounter', 'pruuid', 'location_uuid', 'device_uuid', 'organization_uuid', 'insurance_uuid', 'relevant_history_uuid'];
+    }
+
+    protected function createResultRecordFromDatabaseResult($row)
+    {
+        $record = parent::createResultRecordFromDatabaseResult($row);
+        // var_dump($record);
+        return $record;
+        
     }
 }

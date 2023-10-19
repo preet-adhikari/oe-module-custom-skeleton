@@ -60,11 +60,31 @@ class FhirDeviceRequestService extends FhirServiceBase implements IPatientCompar
      */
     private $dataStore;
 
-    public function __construct($fhirApiURL = null)
+    public function __construct()
     {
-        parent::__construct($fhirApiURL);
+        parent::__construct();
         $this->dataStore = new FHIRDeviceRequestDataStore();
     }
+
+
+        /**
+     * This method returns the FHIR search definition objects that are used to map FHIR search fields to OpenEMR fields.
+     * Since the mapping can be one FHIR search object to many OpenEMR fields, we use the search definition objects.
+     * Search fields can be combined as Composite fields and represent a host of search options.
+     * @see https://www.hl7.org/fhir/search.html to see the types of search operations, and search types that are available
+     * for use.
+     * @return array
+     */
+    protected function loadSearchParameters()
+    {
+        return  [
+            'patient' => $this->getPatientContextSearchField(),
+            'intent' => new FhirSearchParameterDefinition('intent', SearchFieldType::TOKEN, ['intent']),
+            'status' => new FhirSearchParameterDefinition('status', SearchFieldType::TOKEN, ['status']),
+            '_id' => new FhirSearchParameterDefinition('uuid', SearchFieldType::TOKEN, [new ServiceField('uuid', ServiceField::TYPE_UUID)]),
+        ];
+    }
+
 
     /**
      * @param array $dataRecord
@@ -74,7 +94,6 @@ class FhirDeviceRequestService extends FhirServiceBase implements IPatientCompar
     public function parseOpenEMRRecord($dataRecord = array(), $encode = false)
     {
         $deviceRequestResource = new FHIRDeviceRequest();
-
         $meta = new FHIRMeta();
         $meta->setVersionId('1');
         $meta->setLastUpdated(gmdate('c'));
@@ -101,7 +120,26 @@ class FhirDeviceRequestService extends FhirServiceBase implements IPatientCompar
             $deviceRequestResource->setIntent(self::DEVICE_REQUEST_INTENT_PLAN);
         } 
 
-        // Set the subject of 
+        // Set the subject of the device request
+        // subject required
+        if (!empty($dataRecord['pid'])) {
+            $subjectType = 'Patient';
+            $subjectId = $dataRecord['pid'];
+        } elseif (!empty($dataRecord['device_uuid'])) {
+            $subjectType = 'Device';
+            $subjectId = $dataRecord['device_uuid'];
+        } elseif (!empty($dataRecord['location_uuid'])) {
+            $subjectType = 'Location';
+            $subjectId = $dataRecord['location_uuid'];
+        } else {
+            $deviceRequestResource->setSubject(UtilsService::createDataMissingExtension());
+        }
+        
+        if (isset($subjectType)) {
+            $deviceRequestResource->setSubject(UtilsService::createRelativeReference($subjectType, $subjectId));
+        }
+
+        
 
         // Set the priority for the DeviceRequest resource.
         if (isset($dataRecord['priority'])){
@@ -109,9 +147,9 @@ class FhirDeviceRequestService extends FhirServiceBase implements IPatientCompar
         }
 
         // authoredOn must support
-        if (!empty($dataRecord['date_added'])) {
+        if (!empty($dataRecord['event_date'])) {
             $authored_on = new FHIRDateTime();
-            $authored_on->setValue(UtilsService::getLocalDateAsUTC($dataRecord['date_added']));
+            $authored_on->setValue(UtilsService::getLocalDateAsUTC($dataRecord['event_date']));
             $deviceRequestResource->setAuthoredOn($authored_on);
         }
 
@@ -133,23 +171,6 @@ class FhirDeviceRequestService extends FhirServiceBase implements IPatientCompar
         }
     }
 
-    /**
-     * This method returns the FHIR search definition objects that are used to map FHIR search fields to OpenEMR fields.
-     * Since the mapping can be one FHIR search object to many OpenEMR fields, we use the search definition objects.
-     * Search fields can be combined as Composite fields and represent a host of search options.
-     * @see https://www.hl7.org/fhir/search.html to see the types of search operations, and search types that are available
-     * for use.
-     * @return array
-     */
-    protected function loadSearchParameters()
-    {
-        return  [
-            'patient' => $this->getPatientContextSearchField(),
-            'intent' => new FhirSearchParameterDefinition('intent', SearchFieldType::TOKEN, ['intent']),
-            'status' => new FhirSearchParameterDefinition('status', SearchFieldType::TOKEN, ['status']),
-            '_id' => new FhirSearchParameterDefinition('_id', SearchFieldType::TOKEN, [new ServiceField('uuid', ServiceField::TYPE_UUID)]),
-        ];
-    }
 
     /**
      * @return FhirSearchParameterDefinition Returns the search field definition for the patient search field
@@ -159,57 +180,57 @@ class FhirDeviceRequestService extends FhirServiceBase implements IPatientCompar
         return new FhirSearchParameterDefinition('patient', SearchFieldType::TOKEN, [new ServiceField('patient', ServiceField::TYPE_STRING)]);
     }
 
-    protected function searchForOpenEMRRecords($openEMRSearchParameters): ProcessingResult
+    protected function searchForOpenEMRRecords($openEMRSearchParameters, $puuidBind = null): ProcessingResult
     {
-        $result = new ProcessingResult();
+        // $result = new ProcessingResult();
 
-        if (empty($openEMRSearchParameters)) {
-            // just return everything
-            $data = $this->dataStore->getResourceDataStore();
-            foreach ($data as $record) {
-                $result->addData($record);
-            }
-        }
+        // if (empty($openEMRSearchParameters)) {
+        //     // just return everything
+        //     $data = $this->dataStore->getResourceDataStore();
+        //     foreach ($data as $record) {
+        //         $result->addData($record);
+        //     }
+        // }
 
-        if (isset($openEMRSearchParameters['_id']) && $openEMRSearchParameters['_id'] instanceof TokenSearchField) {
-            /**
-             * Note that SearchFields can have multiple values.  We are ignoring all modifiers here, but look at the
-             * core OpenEMR service classes to see how the modifiers are used in SQL
-             */
-            $searchValues = $openEMRSearchParameters['_id']->getValues() ?? [];
-            foreach ($searchValues as $tokenValue) {
-                /**
-                 * Token search fields have both a code and a system that can be searched on.  For our simple search
-                 * we will just grab the code.  More complicated examples can be seen in the core classes.
-                 */
-                $value = $tokenValue->getCode();
-                $record = $this->dataStore->getById($value);
-                if (!empty($record)) {
-                    $result->addData($record);
-                }
-            }
-        }
-        $patientFieldName = $this->getPatientContextSearchField()->getName();
-        if (
-            isset($openEMRSearchParameters[$patientFieldName])
-            && $openEMRSearchParameters[$patientFieldName] instanceof TokenSearchField
-        ) {
-            $searchValues = $openEMRSearchParameters[$patientFieldName]->getValues() ?? [];
-            foreach ($searchValues as $tokenValue) {
-                /**
-                 * Token search fields have both a code and a system that can be searched on.  For our simple search
-                 * we will just grab the code.  More complicated examples can be seen in the core classes.
-                 */
-                $value = $tokenValue->getCode();
-                $records = $this->dataStore->getByPatient($value);
-                if (!empty($records)) {
-                    foreach ($records as $record) {
-                        $result->addData($record);
-                    }
-                }
-            }
-        }
-        return $result;
+        // if (isset($openEMRSearchParameters['_id']) && $openEMRSearchParameters['_id'] instanceof TokenSearchField) {
+        //     /**
+        //      * Note that SearchFields can have multiple values.  We are ignoring all modifiers here, but look at the
+        //      * core OpenEMR service classes to see how the modifiers are used in SQL
+        //      */
+        //     $searchValues = $openEMRSearchParameters['_id']->getValues() ?? [];
+        //     foreach ($searchValues as $tokenValue) {
+        //         /**
+        //          * Token search fields have both a code and a system that can be searched on.  For our simple search
+        //          * we will just grab the code.  More complicated examples can be seen in the core classes.
+        //          */
+        //         $value = $tokenValue->getCode();
+        //         $record = $this->dataStore->getById($value);
+        //         if (!empty($record)) {
+        //             $result->addData($record);
+        //         }
+        //     }
+        // }
+        // $patientFieldName = $this->getPatientContextSearchField()->getName();
+        // if (
+        //     isset($openEMRSearchParameters[$patientFieldName])
+        //     && $openEMRSearchParameters[$patientFieldName] instanceof TokenSearchField
+        // ) {
+        //     $searchValues = $openEMRSearchParameters[$patientFieldName]->getValues() ?? [];
+        //     foreach ($searchValues as $tokenValue) {
+        //         /**
+        //          * Token search fields have both a code and a system that can be searched on.  For our simple search
+        //          * we will just grab the code.  More complicated examples can be seen in the core classes.
+        //          */
+        //         $value = $tokenValue->getCode();
+        //         $records = $this->dataStore->getByPatient($value);
+        //         if (!empty($records)) {
+        //             foreach ($records as $record) {
+        //                 $result->addData($record);
+        //             }
+        //         }
+        //     }
+        // }
+        return $this->dataStore->getResourceDataStore($openEMRSearchParameters, true, $puuidBind);
     }
 
     /**

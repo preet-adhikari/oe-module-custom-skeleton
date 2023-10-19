@@ -103,6 +103,7 @@ class FHIRDeviceRequestRestController
     public function getAll($searchParams, $puuidBind = null)
     {
         $processingResult = $this->fhirDeviceRequestService->getAll($searchParams, $puuidBind);
+        // var_dump($processingResult->getData());
         $bundleEntries = array();
         foreach ($processingResult->getData() as $index => $searchResult) {
             $bundleEntry = [
@@ -112,7 +113,7 @@ class FHIRDeviceRequestRestController
             $fhirBundleEntry = new FHIRBundleEntry($bundleEntry);
             array_push($bundleEntries, $fhirBundleEntry);
         }
-        $bundleSearchResult = $this->fhirService->createBundle('FHIRDeviceRequest', $bundleEntries, false);
+        $bundleSearchResult = $this->fhirService->createBundle('DeviceRequest', $bundleEntries, false);
         $searchResponseBody = RestControllerHelper::responseHandler($bundleSearchResult, null, 200);
         return $searchResponseBody;
     }
