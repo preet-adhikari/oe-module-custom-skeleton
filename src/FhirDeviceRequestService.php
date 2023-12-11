@@ -52,6 +52,7 @@ class FhirDeviceRequestService extends FhirServiceBase implements IPatientCompar
    const DEVICE_REQUEST_STATUS_ENTERED_IN_ERROR = "entered-in-error";
    const DEVICE_REQUEST_STATUS_UNKNOWN = "unknown";
 
+//    TODO : Integrate it according to the PAO DeviceRequest Profile
     const DEVICE_REQUEST_INTENT_PLAN = "plan";
     const DEVICE_REQUEST_INTENT_ORDER = "order";
     
@@ -150,11 +151,13 @@ class FhirDeviceRequestService extends FhirServiceBase implements IPatientCompar
             $deviceRequestResource->setCodeReference(UtilsService::createRelativeReference('Device' , $dataRecord['device_uuid']));
         } else {
             //Create codeCodeableConcept
-            $deviceRequestResource->setCodeCodeableConcept(UtilsService::createCodeableConcept(
-                [
-                   ['code' => '123456',
-                   'system' => FhirCodeSystemConstants::SNOMED_CT]
-                ]
+            $deviceRequestResource->setCodeCodeableConcept(UtilsService::createCodeableConcept([
+                
+                   $dataRecord['device_code'] =>
+                   [ 'system' => FhirCodeSystemConstants::SNOMED_CT,
+                   'description' => $dataRecord['display_name']
+                   ]
+            ]
             ));
         }
 
